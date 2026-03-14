@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Finexus Admin — Property Manager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getDatabase, ref, push, set, update, remove, onValue }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  // ╔══════════════════════════════════════════════════╗
+  // ║  REPLACE THIS WITH YOUR FIREBASE PROJECT CONFIG  ║
+  // ║  Go to: Firebase Console → Project Settings      ║
+  // ║  → Your apps → Web → Config                     ║
+  // ╚══════════════════════════════════════════════════╝
+  const firebaseConfig = {
+  apiKey: "AIzaSyBfDGBOWT7L9htPnljVjtWE8hq_XALgbjk",
+  authDomain: "xusfine.firebaseapp.com",
+  projectId: "xusfine",
+  storageBucket: "xusfine.firebasestorage.app",
+  messagingSenderId: "607144663172",
+  appId: "1:607144663172:web:ecd8ac868bd25e24a6cad1",
+  measurementId: "G-DSL1NBHZD8"
+};
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getDatabase(app, 'https://xusfine-default-rtdb.asia-southeast1.firebasedatabase.app/');
+
+  // ── AUTH STATE ──
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('adminPanel').style.display = 'flex';
+      document.getElementById('userEmail').textContent = user.email;
+      document.getElementById('userAvatar').src = user.photoURL || '';
+      document.getElementById('userName').textContent = user.displayName || user.email;
+      loadProperties();
+    } else {
+      document.getElementById('loginScreen').style.display = 'flex';
+      document.getElementById('adminPanel').style.display = 'none';
+    }
+  });
+
+  // ── EMAIL/PASSWORD LOGIN ──
+  window.handleLogin = async function() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+
+    if (!email || !password) {
+      showToast('Please enter email and password', 'error');
+      return;
+    }
+
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch(e) {
+      showToast('Error: ' + e.message, 'error');
+    }
+  };
+
+  window.logout = async function() {
+    await signOut(auth);
+    showToast('Logged out successfully.', 'info');
+  };
+
+  // ── LOAD PROPERTIES ──
+  function loadProperties() {
+    const propertiesRef = ref(db, 'properties');
+    onValue(propertiesRef, (snap) => {
+      const data = snap.val();
+      const props = [];
+      if (data) {
+        Object.keys(data).forEach(key => {
+          props.push({ id: key, ...data[key] });
+        });
+      }
+      // Sort by createdAt descending
+      props.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      renderTable(props);
+      updateStats(props);
+    }, (err) => {
+      showToast('Database error: ' + err.message, 'error');
+    });
+  }
+
+  // ── ADD PROPERTY ──
+  // ── EDIT PROPERTY ──
+  window.editProperty = function(prop) {
+    // Set editing mode
+    window._editingId = prop.id;
+    
+    // Populate form fields
+    document.getElementById('pName').value = prop.name || '';
+    document.getElementById('pType').value = prop.type || 'House';
+    document.getElementById('pLocation').value = prop.location || '';
+    document.getElementById('pPrice').value = prop.price || '';
+    document.getElementById('pBeds').value = prop.beds || '';
+    document.getElementById('pBaths').value = prop.baths || '';
+    document.getElementById('pArea').value = prop.area || '';
+    document.getElementById('pStatus').value = prop.status || 'For Sale';
+    document.getElementById('pDesc').value = prop.desc || '';
+    document.getElementById('pImages').value = (prop.images || []).join('\n');
+    
+    // Update UI
+    document.getElementById('formPanelTitle').textContent = 'Edit Property';
+    document.getElementById('submitBtn').textContent = 'Update Property';
+    
+    // Open form
+    openFormPanel();
+  };
+
+  window.submitProperty = async function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    btn.textContent = 'Saving...'; btn.disabled = true;
+
+    try {
+      // Parse Google Drive URLs from textarea
+      const imageUrlsText = document.getElementById('pImages').value.trim();
+      let imageUrls = [];
+
+      if (imageUrlsText) {
+        // Split by lines and clean up - save original URLs, convert only when displaying
+        imageUrls = imageUrlsText.split('\n').map(url => url.trim()).filter(url => url);
+      }
+
+      const data = {
+        name: document.getElementById('pName').value.trim(),
+        type: document.getElementById('pType').value,
+        location: document.getElementById('pLocation').value.trim(),
+        price: document.getElementById('pPrice').value.trim(),
+        beds: document.getElementById('pBeds').value,
+        baths: document.getElementById('pBaths').value,
+        area: document.getElementById('pArea').value.trim(),
+        status: document.getElementById('pStatus').value,
+        desc: document.getElementById('pDesc').value.trim(),
+        images: imageUrls,
+        createdAt: Date.now(),
+        addedBy: auth.currentUser.email
+      };
+
+      if (window._editingId) {
+        await update(ref(db, 'properties/' + window._editingId), data);
+        showToast('Property updated successfully! ✓', 'success');
+        window._editingId = null;
+        btn.textContent = 'Add Property';
+      } else {
+        const newPropRef = push(ref(db, 'properties'));
+        await set(newPropRef, data);
+        showToast('Property added successfully! ✓', 'success');
+        btn.textContent = 'Add Property';
+      }
+      document.getElementById('propertyForm').reset();
+      closeFormPanel();
+    } catch(err) {
+      showToast('Error: ' + err.message, 'error');
+      btn.textContent = 'Try Again';
+    }
+    btn.disabled = false;
+  };
+
+  // ── DELETE PROPERTY ──
+  window.deleteProperty = async function(id) {
+    if (!confirm('Delete this property? This cannot be undone.')) return;
+    try {
+      await remove(ref(db, 'properties/' + id));
+      showToast('Property deleted.', 'info');
+    } catch(err) {
+      showToast('Delete failed: ' + err.message, 'error');
+    }
+  };
+
+  // ── TOGGLE FEATURED ──
+  window.toggleFeatured = async function(id) {
+    const prop = _tableData.find(p => p.id === id);
+    if (!prop) return;
+    // Update local data instantly
+    prop.featured = !prop.featured;
+    renderTable(_tableData);
+    // Then update Firebase
+    try {
+      await update(ref(db, 'properties/' + id), { featured: prop.featured });
+      showToast(`Property ${prop.featured ? 'featured' : 'unfeatured'} successfully!`, 'success');
+    } catch(err) {
+      // Revert on error
+      prop.featured = !prop.featured;
+      renderTable(_tableData);
+      showToast('Toggle failed: ' + err.message, 'error');
+    }
+  };
+
+</script>
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0F0F0F;
+    --surface: #181818;
+    --surface2: #212121;
+    --border: rgba(255,255,255,0.07);
+    --text: #F0EDE8;
+    --text-mid: rgba(240,237,232,0.55);
+    --accent: #C8A96E;
+    --accent-dim: rgba(200,169,110,0.12);
+    --red: #E05555;
+    --green: #4CAF88;
+    --glass: rgba(255,255,255,0.04);
+    --glass-border: rgba(255,255,255,0.09);
+    --radius: 18px;
+    --radius-sm: 12px;
+    --sidebar-w: 260px;
+    --font-display: 'Cormorant Garamond', serif;
+    --font-body: 'DM Sans', sans-serif;
+    --transition: cubic-bezier(0.34,1.2,0.64,1);
+  }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
+
+  /* ── LOGIN SCREEN ── */
+  #loginScreen {
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden;
+    background: radial-gradient(ellipse 80% 60% at 50% 40%, rgba(200,169,110,0.08) 0%, transparent 60%);
+  }
+
+  .login-card {
+    background: var(--surface);
+    border: 1px solid var(--glass-border);
+    border-radius: 28px;
+    padding: 52px 48px;
+    text-align: center;
+    max-width: 420px; width: 90%;
+    box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+    animation: modalIn 0.6s var(--transition);
+    position: relative;
+  }
+
+  .login-card::before {
+    content: '';
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 60%; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  }
+
+  .login-logo {
+    font-family: var(--font-display);
+    font-size: 2.4rem; font-weight: 600; color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .login-logo span { color: var(--accent); }
+
+  .login-sub {
+    font-size: 0.8rem; color: var(--text-mid);
+    letter-spacing: 0.1em; text-transform: uppercase;
+    margin-bottom: 40px;
+  }
+
+  .login-icon {
+    width: 72px; height: 72px;
+    background: var(--accent-dim);
+    border: 1.5px solid rgba(200,169,110,0.25);
+    border-radius: 20px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2rem; margin: 0 auto 28px;
+  }
+
+  .login-title {
+    font-family: var(--font-display);
+    font-size: 1.8rem; font-weight: 600; margin-bottom: 8px;
+  }
+
+  .login-desc { color: var(--text-mid); font-size: 0.9rem; margin-bottom: 36px; }
+
+  .google-btn {
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+    width: 100%; padding: 15px 24px;
+    background: #fff; color: #333;
+    border: none; border-radius: 14px;
+    font-family: var(--font-body); font-size: 0.95rem; font-weight: 500;
+    cursor: pointer; transition: all 0.3s ease;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  }
+
+  .google-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+  }
+
+  .google-btn svg { width: 20px; height: 20px; }
+
+  .login-note {
+    margin-top: 20px; font-size: 0.78rem;
+    color: var(--text-mid);
+  }
+
+  /* ── ADMIN PANEL ── */
+  #adminPanel {
+    display: none; min-height: 100vh;
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: var(--sidebar-w);
+    min-height: 100vh;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    padding: 28px 0;
+    position: fixed; left: 0; top: 0; bottom: 0;
+    z-index: 100;
+    transition: transform 0.3s ease;
+  }
+
+  .sidebar-logo {
+    font-family: var(--font-display);
+    font-size: 1.8rem; font-weight: 600;
+    padding: 0 24px 24px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+    color: var(--text);
+    display: block; text-decoration: none;
+  }
+
+  .sidebar-logo span { color: var(--accent); }
+
+  .sidebar-nav { flex: 1; padding: 0 12px; }
+
+  .nav-group { margin-bottom: 8px; }
+
+  .nav-group-label {
+    font-size: 0.65rem; color: var(--text-mid);
+    letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 12px 12px 6px; display: block;
+  }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 14px; border-radius: var(--radius-sm);
+    color: var(--text-mid); text-decoration: none;
+    font-size: 0.875rem; font-weight: 400;
+    cursor: pointer; border: none; background: none;
+    width: 100%; text-align: left;
+    transition: all 0.2s ease;
+  }
+
+  .nav-item:hover {
+    background: var(--glass);
+    color: var(--text);
+  }
+
+  .nav-item.active {
+    background: var(--accent-dim);
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  .nav-item .nav-icon {
+    width: 32px; height: 32px; border-radius: 10px;
+    background: rgba(255,255,255,0.04);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.9rem; flex-shrink: 0;
+  }
+
+  .nav-item.active .nav-icon {
+    background: rgba(200,169,110,0.15);
+  }
+
+  .sidebar-user {
+    padding: 16px; margin: 0 12px;
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-sm);
+    display: flex; align-items: center; gap: 12px;
+  }
+
+  #userAvatar {
+    width: 38px; height: 38px;
+    border-radius: 50%; object-fit: cover;
+    border: 2px solid var(--accent);
+    background: var(--surface2);
+    flex-shrink: 0;
+  }
+
+  .user-info { flex: 1; min-width: 0; }
+
+  #userName {
+    font-size: 0.85rem; font-weight: 500;
+    color: var(--text); white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis;
+    display: block;
+  }
+
+  #userEmail {
+    font-size: 0.72rem; color: var(--text-mid);
+    white-space: nowrap; overflow: hidden;
+    text-overflow: ellipsis; display: block;
+  }
+
+  .logout-btn {
+    background: none; border: none; color: var(--text-mid);
+    cursor: pointer; padding: 4px; border-radius: 8px;
+    font-size: 1rem; transition: all 0.2s ease;
+    flex-shrink: 0;
+    display: flex; align-items: center;
+  }
+
+  .logout-btn:hover { color: var(--red); background: rgba(224,85,85,0.1); }
+
+  /* MAIN CONTENT */
+  .main-content {
+    margin-left: var(--sidebar-w);
+    flex: 1; padding: 32px;
+    min-height: 100vh;
+    background: var(--bg);
+  }
+
+  .page-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 32px; flex-wrap: wrap; gap: 16px;
+  }
+
+  .page-title {
+    font-family: var(--font-display);
+    font-size: 2.2rem; font-weight: 600;
+    color: var(--text);
+  }
+
+  .page-sub { color: var(--text-mid); font-size: 0.875rem; margin-top: 4px; }
+
+  /* STAT CARDS */
+  .stat-cards {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 16px; margin-bottom: 32px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px; position: relative; overflow: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .stat-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+
+  .stat-card::after {
+    content: '';
+    position: absolute; top: 0; right: 0;
+    width: 60px; height: 60px;
+    background: radial-gradient(circle, rgba(200,169,110,0.15) 0%, transparent 70%);
+  }
+
+  .stat-card-label {
+    font-size: 0.75rem; color: var(--text-mid);
+    text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;
+  }
+
+  .stat-card-num {
+    font-family: var(--font-display);
+    font-size: 2.2rem; font-weight: 600; color: var(--text);
+    line-height: 1;
+  }
+
+  .stat-card-num span { color: var(--accent); }
+
+  .stat-card-icon {
+    position: absolute; top: 20px; right: 20px;
+    font-size: 1.4rem; opacity: 0.3;
+  }
+
+  /* TABLE */
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .table-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center;
+    justify-content: space-between; gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .table-title {
+    font-weight: 500; font-size: 1rem; color: var(--text);
+  }
+
+  .table-search {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: 999px; padding: 9px 16px;
+    min-width: 200px;
+  }
+
+  .table-search input {
+    background: none; border: none; outline: none;
+    color: var(--text); font-family: var(--font-body);
+    font-size: 0.875rem; width: 100%;
+  }
+
+  .table-search input::placeholder { color: var(--text-mid); }
+
+  table {
+    width: 100%; border-collapse: collapse;
+  }
+
+  th {
+    padding: 14px 20px; text-align: left;
+    font-size: 0.7rem; color: var(--text-mid);
+    text-transform: uppercase; letter-spacing: 0.08em;
+    background: rgba(255,255,255,0.02);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 0.875rem; color: var(--text);
+    vertical-align: middle;
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .prop-img-thumb {
+    width: 52px; height: 40px;
+    border-radius: 8px; object-fit: cover;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+  }
+
+  .prop-name-cell { font-weight: 500; }
+  .prop-location { color: var(--text-mid); font-size: 0.8rem; }
+
+  .badge {
+    display: inline-flex; padding: 4px 10px;
+    border-radius: 999px; font-size: 0.72rem; font-weight: 500;
+    letter-spacing: 0.04em;
+  }
+
+  .badge-sale { background: rgba(76,175,136,0.12); color: var(--green); }
+  .badge-rent { background: rgba(200,169,110,0.12); color: var(--accent); }
+  .badge-featured { background: rgba(200,169,110,0.2); color: var(--accent); border: 1px solid rgba(200,169,110,0.3); }
+
+  .action-btns {
+    display: flex; gap: 8px;
+  }
+
+  .action-btn {
+    padding: 7px 14px; border-radius: 8px;
+    font-size: 0.78rem; font-weight: 500;
+    cursor: pointer; border: none;
+    font-family: var(--font-body);
+    transition: all 0.2s ease;
+  }
+
+  .action-btn-edit:hover { background: rgba(200,169,110,0.25); }
+
+  .action-btn-featured {
+    background: rgba(76,175,136,0.1);
+    color: var(--green);
+  }
+
+  .action-btn-featured:hover { background: rgba(76,175,136,0.2); }
+
+  .action-btn-unfeatured {
+    background: rgba(200,169,110,0.1);
+    color: var(--accent);
+  }
+
+  .action-btn-unfeatured:hover { background: rgba(200,169,110,0.2); }
+
+  .action-btn-del {
+    background: rgba(224,85,85,0.1);
+    color: var(--red);
+  }
+
+  .action-btn-del:hover { background: rgba(224,85,85,0.2); }
+
+  /* FORM PANEL (Slide-in drawer) */
+  .form-panel-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(8px);
+    z-index: 500;
+    display: none;
+    animation: fadeIn 0.2s ease;
+  }
+
+  .form-panel-overlay.open { display: block; }
+
+  .form-panel {
+    position: fixed; right: 0; top: 0; bottom: 0;
+    width: 480px; max-width: 95vw;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    z-index: 600;
+    display: flex; flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 0.4s var(--transition);
+    overflow: hidden;
+  }
+
+  .form-panel.open { transform: translateX(0); }
+
+  .form-panel-head {
+    padding: 24px 28px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+  }
+
+  #formPanelTitle {
+    font-family: var(--font-display);
+    font-size: 1.5rem; font-weight: 600; color: var(--text);
+  }
+
+  .form-panel-close {
+    background: var(--glass); border: 1px solid var(--glass-border);
+    color: var(--text-mid); border-radius: 10px;
+    width: 36px; height: 36px; cursor: pointer; font-size: 1.1rem;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s ease;
+  }
+
+  .form-panel-close:hover { color: var(--text); background: rgba(255,255,255,0.08); }
+
+  .form-panel-body {
+    flex: 1; overflow-y: auto;
+    padding: 28px;
+  }
+
+  .form-group { margin-bottom: 20px; }
+
+  .form-group label {
+    display: block; font-size: 0.75rem; font-weight: 500;
+    color: var(--text-mid); margin-bottom: 8px;
+    letter-spacing: 0.06em; text-transform: uppercase;
+  }
+
+  .form-group input, .form-group select, .form-group textarea {
+    width: 100%; padding: 12px 16px;
+    background: var(--glass);
+    border: 1.5px solid var(--glass-border);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-body); font-size: 0.9rem;
+    color: var(--text); outline: none; resize: none;
+    transition: all 0.2s ease;
+    appearance: none; -webkit-appearance: none;
+  }
+
+  .form-group select option { background: var(--surface2); color: var(--text); }
+
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(200,169,110,0.1);
+  }
+
+  .form-group input::placeholder, .form-group textarea::placeholder { color: var(--text-mid); }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+  .form-hint {
+    font-size: 0.72rem; color: var(--text-mid);
+    margin-top: 5px; line-height: 1.5;
+  }
+
+  .checkbox-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 16px;
+    background: var(--glass);
+    border: 1.5px solid var(--glass-border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+  }
+
+  .checkbox-row input[type="checkbox"] {
+    width: 18px; height: 18px;
+    padding: 0; cursor: pointer;
+    accent-color: var(--accent);
+  }
+
+  .checkbox-row label {
+    font-size: 0.875rem; color: var(--text);
+    margin: 0; text-transform: none;
+    letter-spacing: 0; cursor: pointer;
+  }
+
+  .img-preview {
+    width: 100%; height: 140px;
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    margin-top: 10px; display: none;
+  }
+
+  .form-panel-footer {
+    padding: 20px 28px;
+    border-top: 1px solid var(--border);
+    display: flex; gap: 12px; flex-shrink: 0;
+  }
+
+  #submitBtn {
+    flex: 1; background: var(--accent); color: var(--bg);
+    border: none; border-radius: var(--radius-sm);
+    padding: 14px; font-family: var(--font-body); font-size: 0.95rem;
+    font-weight: 500; cursor: pointer; transition: all 0.3s ease;
+  }
+
+  #submitBtn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+  #submitBtn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .cancel-btn {
+    padding: 14px 20px;
+    background: var(--glass); color: var(--text-mid);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    cursor: pointer; font-family: var(--font-body); font-size: 0.9rem;
+    transition: all 0.2s ease;
+  }
+
+  .cancel-btn:hover { color: var(--text); border-color: rgba(255,255,255,0.15); }
+
+  /* ADD BTN */
+  .add-btn {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--accent); color: var(--bg);
+    border: none; border-radius: var(--radius-sm);
+    padding: 12px 22px; font-family: var(--font-body);
+    font-size: 0.875rem; font-weight: 500;
+    cursor: pointer; transition: all 0.3s ease;
+  }
+
+  .add-btn:hover { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 8px 24px rgba(200,169,110,0.3); }
+
+  /* TOAST */
+  #toastContainer {
+    position: fixed; bottom: 28px; right: 28px;
+    z-index: 9999; display: flex; flex-direction: column; gap: 10px;
+  }
+
+  .toast {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px; padding: 14px 20px;
+    font-size: 0.875rem; color: var(--text);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+    display: flex; align-items: center; gap: 10px;
+    animation: toastIn 0.4s var(--transition);
+    max-width: 360px;
+  }
+
+  .toast.success { border-left: 3px solid var(--green); }
+  .toast.error { border-left: 3px solid var(--red); }
+  .toast.info { border-left: 3px solid var(--accent); }
+
+  .toast-icon { font-size: 1.1rem; flex-shrink: 0; }
+  .toast-msg { flex: 1; }
+  .toast-close { background: none; border: none; color: var(--text-mid); cursor: pointer; font-size: 0.9rem; padding: 0; }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align: center; padding: 60px 20px; color: var(--text-mid);
+  }
+
+  .empty-state .empty-icon { font-size: 2.5rem; margin-bottom: 12px; }
+  .empty-state p { font-size: 1rem; color: var(--text-mid); }
+
+  /* FIREBASE CONFIG NOTICE */
+  .config-notice {
+    background: rgba(200,169,110,0.08);
+    border: 1px solid rgba(200,169,110,0.2);
+    border-radius: var(--radius-sm);
+    padding: 16px 20px; margin-bottom: 24px;
+    font-size: 0.82rem; color: var(--accent);
+    line-height: 1.6;
+  }
+
+  .config-notice strong { color: var(--text); display: block; margin-bottom: 4px; }
+
+  /* ANIMATIONS */
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes modalIn {
+    from { opacity: 0; transform: scale(0.9) translateY(20px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateX(30px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 900px) {
+    .sidebar { transform: translateX(-100%); }
+    .sidebar.mobile-open { transform: translateX(0); }
+    .main-content { margin-left: 0; }
+    .stat-cards { grid-template-columns: 1fr 1fr; }
+    .mobile-menu-btn { display: flex; }
+  }
+
+  @media (max-width: 600px) {
+    .stat-cards { grid-template-columns: 1fr; }
+    .main-content { padding: 20px 16px; }
+  }
+
+  .mobile-menu-btn {
+    display: none; background: var(--glass); border: 1px solid var(--border);
+    color: var(--text); border-radius: 10px; padding: 8px;
+    cursor: pointer; font-size: 1.2rem;
+  }
+</style>
+</head>
+<body>
+
+<!-- ── LOGIN SCREEN ── -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">Fine<span>xus</span></div>
+    <div class="login-sub">Admin Dashboard</div>
+    <div class="login-icon">🔐</div>
+    <h2 class="login-title" id="loginTitle">Welcome Back</h2>
+    <p class="login-desc" id="loginSubtitle">Sign in with your email and password to access the property management dashboard.</p>
+    
+    <div style="margin-bottom: 24px;">
+      <div class="form-group" style="margin-bottom: 14px;">
+        <label style="text-align: left; display: block;">Email Address</label>
+        <input type="email" id="loginEmail" placeholder="your@email.com" style="width: 100%; padding: 12px 16px; background: var(--glass); border: 1.5px solid var(--glass-border); border-radius: var(--radius-sm); font-family: var(--font-body); font-size: 0.9rem; color: var(--text); outline: none;">
+      </div>
+      <div class="form-group">
+        <label style="text-align: left; display: block;">Password</label>
+        <input type="password" id="loginPassword" placeholder="••••••••" style="width: 100%; padding: 12px 16px; background: var(--glass); border: 1.5px solid var(--glass-border); border-radius: var(--radius-sm); font-family: var(--font-body); font-size: 0.9rem; color: var(--text); outline: none;">
+      </div>
+    </div>
+
+    <button style="display: flex; align-items: center; justify-content: center; width: 100%; padding: 15px 24px; background: var(--accent); color: var(--bg); border: none; border-radius: 14px; font-family: var(--font-body); font-size: 0.95rem; font-weight: 500; cursor: pointer; transition: all 0.3s ease;" onclick="handleLogin()" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter='brightness(1)'">
+      Sign In
+    </button>
+    
+    <p class="login-note">Access is restricted to authorized Finexus administrators only.</p>
+  </div>
+</div>
+
+<!-- ── ADMIN PANEL ── -->
+<div id="adminPanel" style="display:none; flex:1;">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <a href="index.html" class="sidebar-logo" target="_blank">Fine<span>xus</span></a>
+
+    <nav class="sidebar-nav">
+      <div class="nav-group">
+        <span class="nav-group-label">Management</span>
+        <button class="nav-item active" onclick="showSection('properties')">
+          <span class="nav-icon">🏠</span> Properties
+        </button>
+        <button class="nav-item" onclick="showSection('analytics')">
+          <span class="nav-icon">📊</span> Analytics
+        </button>
+      </div>
+      <div class="nav-group">
+        <span class="nav-group-label">Settings</span>
+        <a href="index.html" target="_blank" class="nav-item">
+          <span class="nav-icon">🌐</span> View Website
+        </a>
+      </div>
+    </nav>
+
+    <div class="sidebar-user">
+      <img id="userAvatar" src="" alt="Avatar">
+      <div class="user-info">
+        <span id="userName">Loading...</span>
+        <span id="userEmail">...</span>
+      </div>
+      <button class="logout-btn" onclick="logout()" title="Sign Out">⏏</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main-content">
+
+    <!-- Page Header -->
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Properties</h1>
+        <p class="page-sub">Manage all Finexus property listings</p>
+      </div>
+      <button class="add-btn" onclick="openFormPanel()">
+        + Add Property
+      </button>
+    </div>
+
+    <!-- Stats -->
+    <div class="stat-cards">
+      <div class="stat-card">
+        <div class="stat-card-label">Total Listings</div>
+        <div class="stat-card-num" id="statTotal">—</div>
+        <div class="stat-card-icon">🏘️</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">For Sale</div>
+        <div class="stat-card-num" id="statSale">—</div>
+        <div class="stat-card-icon">🏷️</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">For Rent</div>
+        <div class="stat-card-num" id="statRent">—</div>
+        <div class="stat-card-icon">🔑</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">Featured</div>
+        <div class="stat-card-num" id="statFeatured">—</div>
+        <div class="stat-card-icon">⭐</div>
+      </div>
+    </div>
+
+    <!-- Properties Table -->
+    <div class="table-wrap" id="propertiesSection">
+      <div class="table-header">
+        <div class="table-title">All Properties</div>
+        <div class="table-search">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" placeholder="Search properties..." id="tableSearch" oninput="filterTable(this.value)">
+        </div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Image</th>
+              <th>Property</th>
+              <th>Type</th>
+              <th>Status</th>
+              <th>Price</th>
+              <th>Featured</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="propTableBody">
+            <tr>
+              <td colspan="7">
+                <div class="empty-state">
+                  <div class="empty-icon">⏳</div>
+                  <p>Loading properties from Firebase...</p>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Guide Panel -->
+    <div id="analyticsSection" style="display:none;">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:40px;max-width:700px;">
+        <h2 style="font-family:var(--font-display);font-size:2rem;margin-bottom:16px;">📋 Setup Guide</h2>
+        <div style="line-height:1.9;color:var(--text-mid);font-size:0.9rem;">
+          <p style="margin-bottom:16px;color:var(--text);font-weight:500;">Follow these steps to fully connect Finexus:</p>
+          <ol style="padding-left:20px;">
+            <li style="margin-bottom:12px;"><strong style="color:var(--accent);">Create a Firebase Project</strong><br>Go to <a href="https://console.firebase.google.com" target="_blank" style="color:var(--accent);">console.firebase.google.com</a> → New Project → Finexus</li>
+            <li style="margin-bottom:12px;"><strong style="color:var(--accent);">Enable Google Authentication</strong><br>Build → Authentication → Sign-in method → Google → Enable</li>
+            <li style="margin-bottom:12px;"><strong style="color:var(--accent);">Create Firestore Database</strong><br>Build → Firestore Database → Create → Start in test mode</li>
+            <li style="margin-bottom:12px;"><strong style="color:var(--accent);">Get Config Keys</strong><br>Project Settings → Your Apps → Web → Register App → Copy config</li>
+            <li style="margin-bottom:12px;"><strong style="color:var(--accent);">Update Both HTML Files</strong><br>Replace <code style="color:var(--accent);">YOUR_API_KEY</code> and other placeholders in both <code>index.html</code> and <code>admin.html</code></li>
+            <li style="margin-bottom:12px;"><strong style="color:var(--accent);">Add Google Drive Images</strong><br>Upload image to Google Drive → Share → Anyone with link → Copy URL<br>Paste the URL into the Image field when adding a property. It auto-converts!</li>
+            <li><strong style="color:var(--accent);">Set Firestore Rules (Production)</strong><br>
+            <pre style="background:var(--surface2);padding:12px;border-radius:8px;font-size:0.8rem;margin-top:8px;overflow-x:auto;">rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /properties/{propId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+  }
+}</pre></li>
+          </ol>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ── FORM PANEL ── -->
+<div class="form-panel-overlay" id="formOverlay" onclick="closeFormPanel()"></div>
+<div class="form-panel" id="formPanel">
+  <div class="form-panel-head">
+    <span id="formPanelTitle">Add New Property</span>
+    <button class="form-panel-close" onclick="closeFormPanel()">✕</button>
+  </div>
+  <div class="form-panel-body">
+    <form id="propertyForm" onsubmit="submitProperty(event)">
+      <div class="form-group">
+        <label>Property Name *</label>
+        <input type="text" id="pName" placeholder="e.g. Azure Ridge Villa" required>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Type *</label>
+          <select id="pType" required>
+            <option>House</option>
+            <option>Villa</option>
+            <option>Condo</option>
+            <option>Apartment</option>
+            <option>Commercial</option>
+            <option>Lot Only</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select id="pStatus">
+            <option>For Sale</option>
+            <option>For Rent</option>
+            <option>Sold</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Location *</label>
+        <input type="text" id="pLocation" placeholder="e.g. Davao City, Mindanao" required>
+      </div>
+      <div class="form-group">
+        <label>Asking Price *</label>
+        <input type="text" id="pPrice" placeholder="e.g. ₱12,500,000" required>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Bedrooms</label>
+          <input type="number" id="pBeds" placeholder="3" min="0">
+        </div>
+        <div class="form-group">
+          <label>Bathrooms</label>
+          <input type="number" id="pBaths" placeholder="2" min="0">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Floor Area</label>
+        <input type="text" id="pArea" placeholder="e.g. 250 sqm">
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea id="pDesc" rows="4" placeholder="Describe the property — key features, highlights, location benefits..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>Images (Google Drive Links)</label>
+        <textarea id="pImages" rows="4" placeholder="Paste Google Drive image links here, one per line:&#10;https://drive.google.com/file/d/.../view?usp=sharing&#10;https://drive.google.com/file/d/.../view?usp=sharing"></textarea>
+        <div class="form-hint">Paste direct Google Drive links, one per line. Make sure links are publicly accessible.</div>
+      </div>
+    </form>
+  </div>
+  <div class="form-panel-footer">
+    <button class="cancel-btn" onclick="resetForm()">Reset</button>
+    <button id="submitBtn" onclick="submitProperty(event)">Add Property</button>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div id="toastContainer"></div>
+
+<script>
+  let _tableData = [];
+
+  function updateStats(props) {
+    document.getElementById('statTotal').textContent = props.length;
+    document.getElementById('statSale').textContent = props.filter(p => p.status === 'For Sale').length;
+    document.getElementById('statRent').textContent = props.filter(p => p.status === 'For Rent').length;
+    document.getElementById('statFeatured').textContent = props.filter(p => p.featured).length;
+  }
+
+  function renderTable(props) {
+    _tableData = props;
+    const tbody = document.getElementById('propTableBody');
+    if (!props.length) {
+      tbody.innerHTML = `<tr><td colspan="7">
+        <div class="empty-state">
+          <div class="empty-icon">🏠</div>
+          <p>No properties yet. Click "Add Property" to get started!</p>
+        </div>
+      </td></tr>`;
+      return;
+    }
+    tbody.innerHTML = props.map(p => {
+      const imgUrl = convertDriveUrl(p.image || '');
+      return `<tr>
+        <td><img class="prop-img-thumb" src="${imgUrl || 'https://images.unsplash.com/photo-1560184897-ae75f418493e?w=200&q=60'}" 
+             onerror="this.src='https://images.unsplash.com/photo-1560184897-ae75f418493e?w=200&q=60'" alt=""></td>
+        <td>
+          <div class="prop-name-cell">${p.name}</div>
+          <div class="prop-location">📍 ${p.location}</div>
+        </td>
+        <td>${p.type || '—'}</td>
+        <td><span class="badge ${p.status === 'For Rent' ? 'badge-rent' : 'badge-sale'}">${p.status || 'For Sale'}</span></td>
+        <td><strong>${p.price}</strong></td>
+        <td>${p.featured ? '<span class="badge badge-featured">⭐ Yes</span>' : '<span style="color:var(--text-mid)">No</span>'}</td>
+        <td>
+          <div class="action-btns">
+            <button class="action-btn action-btn-edit" onclick='editProperty(${JSON.stringify(p).replace(/'/g, "&#39;")})'>Edit</button>
+            <button class="action-btn ${p.featured ? 'action-btn-featured' : 'action-btn-unfeatured'}" onclick="toggleFeatured('${p.id}')">${p.featured ? 'Unfeature' : 'Feature'}</button>
+            <button class="action-btn action-btn-del" onclick="deleteProperty('${p.id}')">Delete</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  function filterTable(query) {
+    if (!query) { renderTable(_tableData); return; }
+    const q = query.toLowerCase();
+    const filtered = _tableData.filter(p =>
+      p.name?.toLowerCase().includes(q) ||
+      p.location?.toLowerCase().includes(q) ||
+      p.type?.toLowerCase().includes(q)
+    );
+    renderTable(filtered);
+  }
+
+  function convertDriveUrl(url) {
+    if (!url) return '';
+    // Handle Google Drive URLs in various formats
+    let fileId = null;
+    
+    // Format: https://drive.google.com/file/d/FILE_ID/view or /view?usp=sharing
+    const match1 = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+    if (match1) {
+      fileId = match1[1];
+    }
+    
+    // Format: https://drive.google.com/open?id=FILE_ID
+    const match2 = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    if (!fileId && match2) {
+      fileId = match2[1];
+    }
+    
+    if (fileId) {
+      // Use Google Drive thumbnail format (often more reliable for images)
+      return `https://drive.google.com/thumbnail?id=${fileId}&sz=w800`;
+    }
+    
+    // If not a Google Drive URL, return as-is (it might be a direct image URL)
+    return url;
+  }
+
+  function previewImg(url) {
+    const preview = document.getElementById('imgPreview');
+    const converted = convertDriveUrl(url);
+    if (converted) {
+      preview.src = converted;
+      preview.style.display = 'block';
+      preview.onerror = () => { preview.style.display = 'none'; };
+    } else {
+      preview.style.display = 'none';
+    }
+  }
+
+  function openFormPanel() {
+    document.getElementById('formOverlay').classList.add('open');
+    document.getElementById('formPanel').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeFormPanel() {
+    document.getElementById('formOverlay').classList.remove('open');
+    document.getElementById('formPanel').classList.remove('open');
+    document.body.style.overflow = '';
+    window._editingId = null;
+    document.getElementById('formPanelTitle').textContent = 'Add New Property';
+    document.getElementById('submitBtn').textContent = 'Add Property';
+  }
+
+  function resetForm() {
+    document.getElementById('propertyForm').reset();
+    document.getElementById('imgPreview').style.display = 'none';
+    window._editingId = null;
+    document.getElementById('formPanelTitle').textContent = 'Add New Property';
+    document.getElementById('submitBtn').textContent = 'Add Property';
+  }
+
+  function showSection(section) {
+    document.getElementById('propertiesSection').style.display = section === 'properties' ? 'block' : 'none';
+    document.getElementById('analyticsSection').style.display = section === 'analytics' ? 'block' : 'none';
+    document.querySelectorAll('.nav-item').forEach((el, i) => {
+      el.classList.toggle('active', (i === 0 && section === 'properties') || (i === 1 && section === 'analytics'));
+    });
+  }
+
+  function showToast(msg, type = 'info') {
+    const icons = { success: '✓', error: '✕', info: 'ℹ' };
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `
+      <span class="toast-icon">${icons[type]}</span>
+      <span class="toast-msg">${msg}</span>
+      <button class="toast-close" onclick="this.parentElement.remove()">✕</button>
+    `;
+    document.getElementById('toastContainer').appendChild(toast);
+    setTimeout(() => { if (toast.parentElement) toast.remove(); }, 5000);
+  }
+
+  // Hide config notice after 10s
+  setTimeout(() => {
+    const n = document.getElementById('configNotice');
+    if (n) n.style.opacity = '0.4';
+  }, 10000);
+</script>
+</body>
+</html>

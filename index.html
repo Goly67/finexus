@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Finexus — Real Estate</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<!-- ── NAV ── -->
+<nav id="mainNav">
+  <a href="#home" class="nav-logo"><img src="./finexus images database/FINEXUS LOGO PNG 196.png" alt="FineXus" style="height: 80px; width: auto;"></a>
+  <ul class="nav-links">
+    <li><a href="#home">Home</a></li>
+    <li><a href="#properties">Properties</a></li>
+    <li><a href="#about">About</a></li>
+    <li><a href="#services">Services</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+  <a href="#contact" class="nav-cta nav-links" style="list-style:none; text-decoration:none; display:inline-block; padding:10px 22px; font-family: var(--font-body); font-size:0.875rem; font-weight:500; background:var(--charcoal); color:#fff; border-radius:999px; transition:all 0.3s ease;">Book a Call</a>
+</nav>
+
+<!-- ── HERO ── -->
+<section id="home">
+  <div class="hero-bg"></div>
+  <div class="hero-grid container">
+    <div class="hero-text">
+      <div class="section-label"> Real Estate</div>
+      <h1>Find Your<br><em>Dream</em><br>Property</h1>
+      <p>Seamlessly discover properties that complement your lifestyle. Finexus connects you with homes, villas, and investment opportunities across Surigao Del Norte.</p>
+      <div class="hero-actions">
+        <a href="#properties" class="btn-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          Browse Properties
+        </a>
+        <a href="#contact" class="btn-outline">Talk to an Agent</a>
+      </div>
+    </div>
+    <div class="hero-visuals">
+      <div class="hero-card">
+        <img src="./finexus images database/MARREA BUILD AND SELL PROJECT/pic1.jpg" alt="Luxury home">
+      </div>
+      <div class="hero-card">
+        <img src="./finexus images database/MARREA BUILD AND SELL PROJECT/pic2.jpg" alt="Property">
+      </div>
+      <div class="hero-card">
+        <img src="./finexus images database/MARREA BUILD AND SELL PROJECT/pic3.jpg" alt="Villa">
+      </div>
+      <div class="stat-pill pill-1">
+        <div>
+          <div class="num">500+</div>
+          <div class="label">Properties</div>
+        </div>
+      </div>
+      <div class="stat-pill pill-2">
+        <div>
+          <div class="num">98%</div>
+          <div class="label">Client Satisfaction</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── PROPERTIES ── -->
+<section id="properties">
+  <div class="container">
+    <div class="section-header">
+      <div>
+        <div class="section-label reveal">Latest Listings</div>
+        <h2 class="section-title reveal reveal-delay-1">All Available Properties</h2>
+        <p class="section-sub reveal reveal-delay-2">Browse available properties.</p>
+      </div>
+
+      <!-- Search Bar -->
+      <div class="search-section">
+        <div class="search-glass">
+          <div class="search-field">
+            <label>Location</label>
+            <select id="searchLocation">
+              <option>All Cities</option>
+              <!-- Options will be populated dynamically -->
+            </select>
+          </div>
+          <div class="search-divider"></div>
+          <div class="search-field">
+            <label>Property Type</label>
+            <select id="searchType">
+              <option>All Types</option>
+              <option>House</option>
+              <option>Villa</option>
+              <option>Condo</option>
+              <option>Apartment</option>
+              <option>Commercial</option>
+            </select>
+          </div>
+          <div class="search-divider"></div>
+          <div class="search-field">
+            <label>Max Price</label>
+            <select id="searchPrice">
+              <option>Any Price</option>
+              <option>Under ₱5M</option>
+              <option>₱5M – ₱15M</option>
+              <option>₱15M – ₱30M</option>
+              <option>₱30M+</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-outline reveal" onclick="openAllPropertiesModal()">View All →</button>
+    </div>
+    <div class="properties-grid" id="propertiesGrid">
+      <!-- Loaded by JS -->
+    </div>
+  </div>
+</section>
+
+<!-- ── STATS ── -->
+<div class="container" style="padding: 0 24px;">
+  <div class="stats-bar reveal">
+    <div class="stat-item">
+      <span class="stat-num" data-target="5">0<span>+</span></span>
+      <span class="stat-label">Years Experience</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num" data-target="1000">0<span>+</span></span>
+      <span class="stat-label">Happy Clients</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num" data-target="500">0<span>+</span></span>
+      <span class="stat-label">Properties Ready</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num" data-target="98">0<span>%</span></span>
+      <span class="stat-label">Satisfaction Rate</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── ABOUT ── -->
+<section id="about">
+  <div class="container">
+    <div class="about-grid">
+      <div class="about-img-wrap reveal">
+        <div class="about-img-main">
+          <img src="./finexus images database/MARREA BUILD AND SELL PROJECT/about1.jpg" alt="Finexus Office">
+        </div>
+        <div class="about-img-secondary">
+          <img src="./finexus images database/MARREA BUILD AND SELL PROJECT/about2.jpg" alt="Team">
+        </div>
+        <div class="about-badge-glass">
+          <div class="big-num">5<span>+</span></div>
+          <p>Years of<br>Excellence</p>
+        </div>
+      </div>
+      <div class="about-text reveal reveal-delay-1">
+        <div class="section-label">Who We Are</div>
+        <h2 class="section-title">Built on Trust,<br>Driven by Results</h2>
+        <p class="section-sub" style="margin-bottom: 24px;">Finexus has been at the forefront of Philippine real estate for over 15 years. We combine deep market expertise with a genuine commitment to our clients — delivering not just properties, but the right home for your life.</p>
+        <p style="color:var(--mid); font-size:0.9rem; line-height:1.8;">Our approach goes beyond transactions: transparent dealings, ethical practices, and a commitment to long-term relationships. We've redefined the art of property acquisition and sales in the Surigao Del Norte.</p>
+        <div class="about-features">
+          <div class="about-feat">
+            <div class="feat-icon">🏆</div>
+            <div class="feat-title">Award-Winning</div>
+            <div class="feat-desc">Recognized as top real estate firm 5 years running</div>
+          </div>
+          <div class="about-feat">
+            <div class="feat-icon">🔐</div>
+            <div class="feat-title">Fully Licensed</div>
+            <div class="feat-desc">PRC & HLURB certified agents and brokers</div>
+          </div>
+          <div class="about-feat">
+            <div class="feat-icon">🌐</div>
+            <div class="feat-title">Wide Network</div>
+            <div class="feat-desc">Properties across all major Philippine cities</div>
+          </div>
+          <div class="about-feat">
+            <div class="feat-icon">💼</div>
+            <div class="feat-title">Full Service</div>
+            <div class="feat-desc">From search to keys — we handle everything</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── TEAM ── -->
+<section style="background: var(--ivory); padding: 80px 0;">
+  <div class="container">
+    <div class="section-label reveal">Our People</div>
+    <h2 class="section-title reveal reveal-delay-1">Meet the Team</h2>
+    <div class="team-grid">
+      <div class="team-card reveal">
+        <div class="team-avatar">JC</div>
+        <div class="team-name">Jacob Casurra</div>
+        <div class="team-role">Founder & CEO</div>
+        <div class="team-contact">---<br>+63 956 025 8125</div>
+      </div>
+      <div class="team-card reveal reveal-delay-1">
+        <div class="team-avatar">MC</div>
+        <div class="team-name">Mercy Casurra</div>
+        <div class="team-role">---</div>
+        <div class="team-contact">---<br>+63 --- --- ----</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── SERVICES ── -->
+<section id="services">
+  <div class="container">
+    <div class="section-header">
+      <div>
+        <div class="section-label reveal">What We Offer</div>
+        <h2 class="section-title reveal reveal-delay-1">Our Services</h2>
+        <p class="section-sub reveal reveal-delay-2">End-to-end solutions for buyers, sellers, and investors.</p>
+      </div>
+    </div>
+    <div class="services-grid">
+      <div class="service-card reveal">
+        <div class="service-num">01</div>
+        <div class="service-icon">📃</div>
+        <h3 class="service-title">TITLING PROCESSING</h3>
+        <p class="service-desc">Handling all legal documentation and title transfers for property transactions.</p>
+      </div>
+      <div class="service-card reveal reveal-delay-1">
+        <div class="service-num">02</div>
+        <div class="service-icon">🏠</div>
+        <h3 class="service-title">BUY / SELL OF PROPERTIES</h3>
+        <p class="service-desc">Assisting with purchasing and selling real estate properties efficiently.</p>
+      </div>
+      <div class="service-card reveal reveal-delay-2">
+        <div class="service-num">03</div>
+        <div class="service-icon">🗺️</div>
+        <h3 class="service-title">SUBDIVISION PROPERTIES</h3>
+        <p class="service-desc">Managing the subdivision process for land and property development.</p>
+      </div>
+      <div class="service-card reveal">
+        <div class="service-num">04</div>
+        <div class="service-icon">🔍</div>
+        <h3 class="service-title">REAL ESTATE DUE DILIGENCE</h3>
+        <p class="service-desc">Conducting thorough investigations and verifications for property investments.</p>
+      </div>
+      <div class="service-card reveal reveal-delay-1">
+        <div class="service-num">05</div>
+        <div class="service-icon">💰</div>
+        <h3 class="service-title">REAL ESTATE APPRAISAL</h3>
+        <p class="service-desc">Providing professional property valuation services.</p>
+      </div>
+      <div class="service-card reveal reveal-delay-2">
+        <div class="service-num">06</div>
+        <div class="service-icon">📏</div>
+        <h3 class="service-title">LAND SURVEY</h3>
+        <p class="service-desc">Performing accurate land surveying and mapping services.</p>
+      </div>
+      <div class="service-card reveal">
+        <div class="service-num">07</div>
+        <div class="service-icon">🏢</div>
+        <h3 class="service-title">RENTAL ASSISTANCE</h3>
+        <p class="service-desc">Helping with property rentals and tenant management.</p>
+      </div>
+      <div class="service-card reveal reveal-delay-1">
+        <div class="service-num">08</div>
+        <div class="service-icon">📊</div>
+        <h3 class="service-title">CGT PROCESSING</h3>
+        <p class="service-desc">Handling Capital Gains Tax calculations and filings for property sales.</p>
+      </div>
+      <div class="service-card reveal reveal-delay-2">
+        <div class="service-num">09</div>
+        <div class="service-icon">🏛️</div>
+        <h3 class="service-title">ESTATE TAX PROCESSING</h3>
+        <p class="service-desc">Managing estate tax assessments and processing for property inheritance.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CONTACT ── -->
+<section id="contact">
+  <div class="container">
+    <div class="contact-wrap">
+      <div class="contact-info">
+        <div class="section-label reveal">Get in Touch</div>
+        <h2 class="reveal reveal-delay-1">Let's Find Your<br>Perfect Property</h2>
+        <p class="reveal reveal-delay-2">Whether you're buying, selling, or investing, our team is ready to guide you every step of the way. Reach out today.</p>
+
+        <div class="contact-cards">
+          <a href="tel:+639170000001" class="contact-card reveal">
+            <div class="contact-card-icon">📞</div>
+            <div class="contact-card-info">
+              <div class="contact-card-label">Phone</div>
+              <div class="contact-card-value">+63 956 025 8125</div>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--light-mid)" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+          <a href="mailto:finexusglobalrealtyfirm@gmail.com" class="contact-card reveal reveal-delay-1">
+            <div class="contact-card-icon">✉️</div>
+            <div class="contact-card-info">
+              <div class="contact-card-label">Email</div>
+              <div class="contact-card-value">finexusglobalrealtyfirm@gmail.com</div>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--light-mid)" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+          <a href="#" class="contact-card reveal reveal-delay-2">
+            <div class="contact-card-icon">📍</div>
+            <div class="contact-card-info">
+              <div class="contact-card-label">Office</div>
+              <div class="contact-card-value">Rizal St., Surigao City, Philippines, 8400</div>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--light-mid)" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+          <a href="#" class="contact-card reveal reveal-delay-3">
+            <div class="contact-card-icon">💬</div>
+            <div class="contact-card-info">
+              <div class="contact-card-label">WhatsApp / Viber</div>
+              <div class="contact-card-value">+63 956 025 8125</div>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--light-mid)" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <div class="contact-form-wrap reveal reveal-delay-2">
+        <h3 style="font-family:var(--font-display); font-size:1.6rem; margin-bottom:24px; color:var(--charcoal);">Send a Message</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label>First Name</label>
+            <input type="text" placeholder="Juan">
+          </div>
+          <div class="form-group">
+            <label>Last Name</label>
+            <input type="text" placeholder="dela Cruz">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" placeholder="juan@email.com">
+        </div>
+        <div class="form-group">
+          <label>Phone</label>
+          <input type="tel" placeholder="+63 9XX XXX XXXX">
+        </div>
+        <div class="form-group">
+          <label>Property Interest</label>
+          <select>
+            <option>Select type...</option>
+            <option>House & Lot</option>
+            <option>Condo</option>
+            <option>Villa</option>
+            <option>Commercial</option>
+            <option>Investment Lot</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Message</label>
+          <textarea rows="4" placeholder="Tell us about your property needs..."></textarea>
+        </div>
+        <button class="form-submit">Send Message →</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="#home" class="nav-logo" style="display:inline-flex;align-items:center;">
+          <img src="./finexus images database/FINEXUS LOGO PNG 196.png" alt="FineXus" style="height: 100px; width: auto;" />
+        </a>
+        <p>Real estate solutions in Surigao Del Norte. Trusted by thousands of families to find their perfect home.</p>
+        <div style="margin-top:20px; display:flex; gap:12px;">
+          <a href="#" style="width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:0.9rem;transition:all 0.2s;color:#fff;">f</a>
+          <a href="#" style="width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:0.9rem;transition:all 0.2s;color:#fff;">in</a>
+          <a href="#" style="width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:0.9rem;transition:all 0.2s;color:#fff;">ig</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Quick Links</h4>
+        <ul>
+          <li><a href="#home">Home</a></li>
+          <li><a href="#properties">Properties</a></li>
+          <li><a href="#about">About Us</a></li>
+          <li><a href="#services">Services</a></li>
+          <li><a href="#contact">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Property Types</h4>
+        <ul>
+          <li><a href="#properties" data-type="House">House</a></li>
+          <li><a href="#properties" data-type="Condo">Condo</a></li>
+          <li><a href="#properties" data-type="Villa">Villa</a></li>
+          <li><a href="#properties" data-type="Commercial">Commercial</a></li>
+          <li><a href="#properties" data-type="Vacant Lot">Vacant Lot</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Locations</h4>
+        <ul id="footerLocations">
+          <!-- Locations will be populated dynamically -->
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2025 Finexus. All rights reserved.</span>
+      <span>Privacy Policy · Terms of Service</span>
+    </div>
+  </div>
+</footer>
+
+<!-- ── PROPERTY MODAL ── -->
+<div class="modal-overlay" id="propertyModal">
+  <div class="modal-wrap">
+    <div class="modal">
+      <div class="modal-img">
+        <img id="modalImg" src="" alt="" loading="lazy" decoding="async">
+        <button class="carousel-btn prev" onclick="prevImage()">&#10094;</button>
+        <button class="carousel-btn next" onclick="nextImage()">&#10095;</button>
+        <button class="modal-fullscreen" onclick="toggleFullscreen()" title="Expand View">⛶</button>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+        <div class="carousel-indicators" id="carouselIndicators"></div>
+      </div>
+      <div class="modal-body">
+        <div id="modalBadge" class="property-badge" style="display:inline-block;margin-bottom:12px;"></div>
+        <h2 id="modalName" style="font-family:var(--font-display);font-size:2rem;font-weight:600;margin-bottom:8px;"></h2>
+        <div id="modalLocation" style="color:var(--mid);margin-bottom:20px;display:flex;align-items:center;gap:6px;"></div>
+        <div id="modalSpecs" style="display:flex;gap:16px;padding:16px 0;border-top:1px solid rgba(0,0,0,0.06);border-bottom:1px solid rgba(0,0,0,0.06);margin-bottom:20px;flex-wrap:wrap;"></div>
+        <p id="modalDesc" style="color:var(--mid);line-height:1.8;margin-bottom:24px;"></p>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
+          <div id="modalPrice" style="font-family:var(--font-display);font-size:2.5rem;font-weight:600;color:var(--charcoal);"></div>
+          <a href="#contact" onclick="closeModal()" class="btn-primary">Inquire Now →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── ALL PROPERTIES MODAL ── -->
+<div class="modal-overlay" id="allPropertiesModal">
+  <div class="modal-wrap">
+    <div class="modal expanded" style="max-width: 1200px;">
+      <button class="modal-close" onclick="closeAllPropertiesModal()">✕</button>
+      <div class="modal-body" style="padding: 36px;">
+        <h2 style="font-family:var(--font-display);font-size:2rem;font-weight:600;margin-bottom:24px;">All Properties</h2>
+        <div id="allPropertiesGrid">
+          <!-- properties will be inserted here -->
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="js/main.js" type="module">
+</script>
+</body>
+</html>
