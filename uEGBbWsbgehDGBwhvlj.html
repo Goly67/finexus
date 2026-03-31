@@ -68,9 +68,6 @@
           <span class="nav-icon">💬</span> Messages
           <span id="msgBadge"></span>
         </button>
-        <button class="nav-item" onclick="showSection('analytics')">
-          <span class="nav-icon">📊</span> Guide
-        </button>
       </div>
       <div class="nav-group">
         <span class="nav-group-label">Website</span>
@@ -187,28 +184,6 @@
               <tr><td colspan="6"><div class="empty-state"><div class="empty-icon">⏳</div><p>Loading messages…</p></div></td></tr>
             </tbody>
           </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- ── GUIDE SECTION ── -->
-    <div id="analyticsSection" style="display:none;">
-      <div class="page-header">
-        <div>
-          <h1 class="page-title">Setup Guide</h1>
-          <p class="page-sub">How to configure and use the Finexus admin panel</p>
-        </div>
-      </div>
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:40px;max-width:700px;">
-        <div style="line-height:1.9;color:var(--text-mid);font-size:0.9rem;">
-          <p style="margin-bottom:16px;color:var(--text);font-weight:500;">Follow these steps to fully connect Finexus:</p>
-          <ol style="padding-left:20px;">
-            <li style="margin-bottom:12px;"><strong style="color:var(--accent);">Firebase Project</strong><br>Go to <a href="https://console.firebase.google.com" target="_blank" style="color:var(--accent);">console.firebase.google.com</a> → New Project → Finexus</li>
-            <li style="margin-bottom:12px;"><strong style="color:var(--accent);">Enable Authentication</strong><br>Build → Authentication → Sign-in method → Email/Password → Enable</li>
-            <li style="margin-bottom:12px;"><strong style="color:var(--accent);">Realtime Database Rules</strong><br>Go to Realtime Database → Rules and paste your secure rules.</li>
-            <li style="margin-bottom:12px;"><strong style="color:var(--accent);">Google Drive Images</strong><br>Upload to Drive → Share → Anyone with link → Copy URL → Paste into image field</li>
-            <li><strong style="color:var(--accent);">Contact Form Messages</strong><br>Messages submitted on the website appear in the Messages section automatically.</li>
-          </ol>
         </div>
       </div>
     </div>
