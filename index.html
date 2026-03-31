@@ -4,16 +4,32 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Finexus — Real Estate</title>
+
+<!-- ── PERFORMANCE: DNS + Connection pre-warming ── -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="icon" type="image/png" href="./finexus images database/FINEXUS PNG LOGO.png">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="image" href="./finexus images database/MARREA BUILD AND SELL PROJECT/pic1.jpg" fetchpriority="high">
+
+<!-- ── Favicon ── -->
+<link rel="icon" type="image/png" href="./finexus images database/FINEXUS PNG LOGO.png">
+
+<!-- ── Google Fonts (display=swap already set — good) ── -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
 <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
 
 <!-- ── NAV ── -->
 <nav id="mainNav">
-  <a href="#home" class="nav-logo"><img src="./finexus images database/FINEXUS LOGO PNG 196.png" alt="FineXus" style="height: 80px; width: auto;"></a>
+  <!-- PERFORMANCE: Logo img — small UI element, eager is fine -->
+  <a href="#home" class="nav-logo">
+    <img src="./finexus images database/FINEXUS LOGO PNG 196.png"
+         alt="FineXus"
+         width="196" height="80"
+         decoding="async"
+         style="height: 80px; width: auto;">
+  </a>
   <ul class="nav-links">
     <li><a href="#home">Home</a></li>
     <li><a href="#properties">Properties</a></li>
@@ -42,13 +58,28 @@
     </div>
     <div class="hero-visuals">
       <div class="hero-card">
-        <img src="./finexus images database/MARREA BUILD AND SELL PROJECT/pic1.jpg" alt="Luxury home">
+        <!-- PERFORMANCE: First image — eager + high priority. This is the LCP element. -->
+        <img src="./finexus images database/MARREA BUILD AND SELL PROJECT/pic1.jpg"
+             alt="Luxury home"
+             width="600" height="400"
+             fetchpriority="high"
+             decoding="sync"
+             loading="eager">
       </div>
       <div class="hero-card">
-        <img src="./finexus images database/MARREA BUILD AND SELL PROJECT/pic2.jpg" alt="Property">
+        <!-- PERFORMANCE: Second + third hero images — lazy load. Below-the-fold on most viewports. -->
+        <img src="./finexus images database/MARREA BUILD AND SELL PROJECT/pic2.jpg"
+             alt="Property"
+             width="600" height="400"
+             loading="lazy"
+             decoding="async">
       </div>
       <div class="hero-card">
-        <img src="./finexus images database/MARREA BUILD AND SELL PROJECT/pic3.jpg" alt="Villa">
+        <img src="./finexus images database/MARREA BUILD AND SELL PROJECT/pic3.jpg"
+             alt="Villa"
+             width="600" height="400"
+             loading="lazy"
+             decoding="async">
       </div>
       <div class="stat-pill pill-1">
         <div>
@@ -83,7 +114,6 @@
             <label>Location</label>
             <select id="searchLocation">
               <option>All Cities</option>
-              <!-- Options will be populated dynamically -->
             </select>
           </div>
           <div class="search-divider"></div>
@@ -148,10 +178,19 @@
     <div class="about-grid">
       <div class="about-img-wrap reveal">
         <div class="about-img-main">
-          <img src="./finexus images database/MARREA BUILD AND SELL PROJECT/about1.jpg" alt="Finexus Office">
+          <!-- PERFORMANCE: About images are well below fold — lazy load both -->
+          <img src="./finexus images database/MARREA BUILD AND SELL PROJECT/about1.jpg"
+               alt="Finexus Office"
+               width="600" height="450"
+               loading="lazy"
+               decoding="async">
         </div>
         <div class="about-img-secondary">
-          <img src="./finexus images database/MARREA BUILD AND SELL PROJECT/about2.jpg" alt="Team">
+          <img src="./finexus images database/MARREA BUILD AND SELL PROJECT/about2.jpg"
+               alt="Team"
+               width="300" height="225"
+               loading="lazy"
+               decoding="async">
         </div>
         <div class="about-badge-glass">
           <div class="big-num">5<span>+</span></div>
@@ -291,7 +330,7 @@
         <p class="reveal reveal-delay-2">Whether you're buying, selling, or investing, our team is ready to guide you every step of the way. Reach out today.</p>
 
         <div class="contact-cards">
-          <a href="tel:+639170000001" class="contact-card reveal">
+          <a href="tel:+639560258125" class="contact-card reveal">
             <div class="contact-card-icon">📞</div>
             <div class="contact-card-info">
               <div class="contact-card-label">Phone</div>
@@ -373,7 +412,13 @@
     <div class="footer-grid">
       <div class="footer-brand">
         <a href="#home" class="nav-logo" style="display:inline-flex;align-items:center;">
-          <img src="./finexus images database/FINEXUS LOGO PNG 196.png" alt="FineXus" style="height: 100px; width: auto;" />
+          <!-- PERFORMANCE: Footer logo — lazy load, well below fold -->
+          <img src="./finexus images database/FINEXUS LOGO PNG 196.png"
+               alt="FineXus"
+               width="196" height="100"
+               loading="lazy"
+               decoding="async"
+               style="height: 100px; width: auto;" />
         </a>
         <p>Real estate solutions in Surigao Del Norte. Trusted by thousands of families to find their perfect home.</p>
         <div style="margin-top:20px; display:flex; gap:12px;">
@@ -405,7 +450,7 @@
       <div class="footer-col">
         <h4>Locations</h4>
         <ul id="footerLocations">
-          <!-- Locations will be populated dynamically -->
+          <!-- Populated dynamically -->
         </ul>
       </div>
     </div>
@@ -421,6 +466,7 @@
   <div class="modal-wrap">
     <div class="modal">
       <div class="modal-img">
+        <!-- PERFORMANCE: Modal image — lazy + async. Never visible until user opens it. -->
         <img id="modalImg" src="" alt="" loading="lazy" decoding="async">
         <button class="carousel-btn prev" onclick="prevImage()">&#10094;</button>
         <button class="carousel-btn next" onclick="nextImage()">&#10095;</button>
@@ -451,13 +497,15 @@
       <div class="modal-body" style="padding: 36px;">
         <h2 style="font-family:var(--font-display);font-size:2rem;font-weight:600;margin-bottom:24px;">All Properties</h2>
         <div id="allPropertiesGrid">
-          <!-- properties will be inserted here -->
+          <!-- Properties inserted by JS -->
         </div>
       </div>
     </div>
   </div>
 </div>
-<script src="js/main.js" type="module">
-</script>
+
+<!-- ── SCRIPT ── -->
+<!-- type="module" already makes this non-render-blocking (implicit defer). No change needed. -->
+<script src="js/main.js" type="module"></script>
 </body>
 </html>

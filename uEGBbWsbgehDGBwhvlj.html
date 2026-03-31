@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Finexus Admin — Property Manager</title>
+<link rel="icon" type="image/png" href="./finexus images database/FINEXUS PNG LOGO.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles2.css">
+
+</head>
+<body>
+
+<!-- ── LOGIN ── -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">Fine<span>xus</span></div>
+    <div class="login-sub">Admin Dashboard</div>
+    <div class="login-icon">🔐</div>
+    <h2 class="login-title">Welcome Back</h2>
+    <p class="login-desc">Sign in with your email and password to access the property management dashboard.</p>
+    <div style="margin-bottom:24px;">
+      <div class="form-group" style="margin-bottom:14px;text-align:left;">
+        <label style="display:block;font-size:0.75rem;font-weight:500;color:var(--text-mid);margin-bottom:8px;letter-spacing:0.06em;text-transform:uppercase;">Email Address</label>
+        <input type="email" id="loginEmail" placeholder="your@email.com"
+          style="width:100%;padding:12px 16px;background:var(--glass);border:1.5px solid var(--glass-border);border-radius:var(--radius-sm);font-family:var(--font-body);font-size:0.9rem;color:var(--text);outline:none;"
+          onkeydown="if(event.key==='Enter')handleLogin()">
+      </div>
+      <div class="form-group" style="text-align:left;">
+        <label style="display:block;font-size:0.75rem;font-weight:500;color:var(--text-mid);margin-bottom:8px;letter-spacing:0.06em;text-transform:uppercase;">Password</label>
+        <input type="password" id="loginPassword" placeholder="••••••••"
+          style="width:100%;padding:12px 16px;background:var(--glass);border:1.5px solid var(--glass-border);border-radius:var(--radius-sm);font-family:var(--font-body);font-size:0.9rem;color:var(--text);outline:none;"
+          onkeydown="if(event.key==='Enter')handleLogin()">
+      </div>
+    </div>
+    <button onclick="handleLogin()"
+      style="display:flex;align-items:center;justify-content:center;width:100%;padding:15px 24px;background:var(--accent);color:var(--bg);border:none;border-radius:14px;font-family:var(--font-body);font-size:0.95rem;font-weight:500;cursor:pointer;transition:all 0.3s ease;"
+      onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter='brightness(1)'">
+      Sign In
+    </button>
+    <p class="login-note">Access is restricted to authorized Finexus administrators only.</p>
+  </div>
+</div>
+
+<!-- ── ADMIN PANEL ── -->
+<div id="adminPanel" style="display:none;flex:1;">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+
+    <div class="sidebar-logo-wrap">
+      <a href="index.html" target="_blank" title="View Website">
+        <img src="./finexus images database/FINEXUS PNG LOGO.png"
+             alt="Finexus" class="sidebar-logo-img"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+        <span style="display:none;font-family:var(--font-display);font-size:1.8rem;font-weight:600;color:var(--text);">Fine<span style="color:var(--accent);">xus</span></span>
+      </a>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-group">
+        <span class="nav-group-label">Management</span>
+        <button class="nav-item active" onclick="showSection('properties')">
+          <span class="nav-icon">🏠</span> Properties
+        </button>
+        <button class="nav-item" onclick="showSection('messages')">
+          <span class="nav-icon">💬</span> Messages
+          <span id="msgBadge"></span>
+        </button>
+        <button class="nav-item" onclick="showSection('analytics')">
+          <span class="nav-icon">📊</span> Guide
+        </button>
+      </div>
+      <div class="nav-group">
+        <span class="nav-group-label">Website</span>
+        <a href="index.html" target="_blank" class="nav-item">
+          <span class="nav-icon">🌐</span> View Live Site
+        </a>
+      </div>
+    </nav>
+
+    <div class="sidebar-user">
+      <div class="sidebar-user-avatar" id="userAvatarWrap">
+        <img src="./finexus images database/FINEXUS PNG LOGO.png"
+             alt="Finexus"
+             onerror="this.style.display='none'">
+      </div>
+      <div class="user-info">
+        <span id="userName">Loading...</span>
+        <span id="userEmail">...</span>
+      </div>
+      <button class="logout-btn" onclick="logout()" title="Sign Out">⏏</button>
+    </div>
+
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main-content">
+
+    <!-- ── PROPERTIES SECTION ── -->
+    <div id="propertiesSection">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Properties</h1>
+          <p class="page-sub">Manage all Finexus property listings</p>
+        </div>
+        <button class="add-btn" onclick="openFormPanel()">+ Add Property</button>
+      </div>
+
+      <div class="stat-cards">
+        <div class="stat-card">
+          <div class="stat-card-label">Total Listings</div>
+          <div class="stat-card-num" id="statTotal">—</div>
+          <div class="stat-card-icon">🏘️</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">For Sale</div>
+          <div class="stat-card-num" id="statSale">—</div>
+          <div class="stat-card-icon">🏷️</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">For Rent</div>
+          <div class="stat-card-num" id="statRent">—</div>
+          <div class="stat-card-icon">🔑</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">Featured</div>
+          <div class="stat-card-num" id="statFeatured">—</div>
+          <div class="stat-card-icon">⭐</div>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <div class="table-header">
+          <div class="table-title">All Properties</div>
+          <div class="table-search">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input type="text" placeholder="Search properties…" id="tableSearch" oninput="filterTable(this.value)">
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Image</th><th>Property</th><th>Type</th>
+                <th>Status</th><th>Price</th><th>Featured</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="propTableBody">
+              <tr><td colspan="7"><div class="empty-state"><div class="empty-icon">⏳</div><p>Loading properties…</p></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── MESSAGES SECTION ── -->
+    <div id="messagesSection" style="display:none;">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Messages</h1>
+          <p class="page-sub">Client inquiries submitted through the website</p>
+        </div>
+        <button class="add-btn" style="background:var(--glass);color:var(--text);border:1px solid var(--border);" onclick="markAllRead()">
+          ✓ Mark All Read
+        </button>
+      </div>
+
+      <div class="table-wrap">
+        <div class="table-header">
+          <div class="table-title">All Inquiries</div>
+          <div class="table-search">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input type="text" placeholder="Search by name or email…" id="msgSearch" oninput="filterMessages(this.value)">
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Client</th><th>Phone</th><th>Interest</th>
+                <th>Message</th><th>Date</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="messagesTableBody">
+              <tr><td colspan="6"><div class="empty-state"><div class="empty-icon">⏳</div><p>Loading messages…</p></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── GUIDE SECTION ── -->
+    <div id="analyticsSection" style="display:none;">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Setup Guide</h1>
+          <p class="page-sub">How to configure and use the Finexus admin panel</p>
+        </div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:40px;max-width:700px;">
+        <div style="line-height:1.9;color:var(--text-mid);font-size:0.9rem;">
+          <p style="margin-bottom:16px;color:var(--text);font-weight:500;">Follow these steps to fully connect Finexus:</p>
+          <ol style="padding-left:20px;">
+            <li style="margin-bottom:12px;"><strong style="color:var(--accent);">Firebase Project</strong><br>Go to <a href="https://console.firebase.google.com" target="_blank" style="color:var(--accent);">console.firebase.google.com</a> → New Project → Finexus</li>
+            <li style="margin-bottom:12px;"><strong style="color:var(--accent);">Enable Authentication</strong><br>Build → Authentication → Sign-in method → Email/Password → Enable</li>
+            <li style="margin-bottom:12px;"><strong style="color:var(--accent);">Realtime Database Rules</strong><br>Go to Realtime Database → Rules and paste your secure rules.</li>
+            <li style="margin-bottom:12px;"><strong style="color:var(--accent);">Google Drive Images</strong><br>Upload to Drive → Share → Anyone with link → Copy URL → Paste into image field</li>
+            <li><strong style="color:var(--accent);">Contact Form Messages</strong><br>Messages submitted on the website appear in the Messages section automatically.</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ── ADD/EDIT PROPERTY PANEL ── -->
+<div class="form-panel-overlay" id="formOverlay" onclick="closeFormPanel()"></div>
+<div class="form-panel" id="formPanel">
+  <div class="form-panel-head">
+    <span id="formPanelTitle">Add New Property</span>
+    <button class="form-panel-close" onclick="closeFormPanel()">✕</button>
+  </div>
+  <div class="form-panel-body">
+    <form id="propertyForm" onsubmit="submitProperty(event)">
+      <div class="form-group">
+        <label>Property Name *</label>
+        <input type="text" id="pName" placeholder="e.g. Azure Ridge Villa" required>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Type *</label>
+          <select id="pType" required>
+            <option>House</option><option>Villa</option><option>Condo</option>
+            <option>Apartment</option><option>Commercial</option><option>Lot Only</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select id="pStatus">
+            <option>For Sale</option><option>For Rent</option><option>Sold</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Location *</label>
+        <input type="text" id="pLocation" placeholder="e.g. Surigao City, Mindanao" required>
+      </div>
+      <div class="form-group">
+        <label>Asking Price *</label>
+        <input type="text" id="pPrice" placeholder="e.g. 12,500,000" required>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Bedrooms</label>
+          <input type="number" id="pBeds" placeholder="3" min="0">
+        </div>
+        <div class="form-group">
+          <label>Bathrooms</label>
+          <input type="number" id="pBaths" placeholder="2" min="0">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Floor Area</label>
+        <input type="text" id="pArea" placeholder="e.g. 250 sqm">
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea id="pDesc" rows="4" placeholder="Describe the property — key features, highlights, location benefits…"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Images (Google Drive Links)</label>
+        <textarea id="pImages" rows="4" placeholder="Paste Google Drive image links here, one per line:&#10;https://drive.google.com/file/d/.../view?usp=sharing"></textarea>
+        <div class="form-hint">Paste direct Google Drive links, one per line. Make sure links are publicly accessible (Anyone with link → Viewer).</div>
+      </div>
+    </form>
+  </div>
+  <div class="form-panel-footer">
+    <button class="cancel-btn" onclick="resetForm()">Reset</button>
+    <button id="submitBtn" onclick="submitProperty(event)">Add Property</button>
+  </div>
+</div>
+
+<!-- ── MESSAGE DETAIL MODAL ── -->
+<div class="msg-modal-overlay" id="msgDetailModal">
+  <div class="msg-modal">
+    <div class="msg-modal-head">
+      <span class="msg-modal-title">Client Message</span>
+      <button class="msg-modal-close" onclick="closeMsgModal()">✕</button>
+    </div>
+    <div class="msg-modal-body">
+      <div class="msg-detail-row">
+        <span class="msg-detail-label">Name</span>
+        <span class="msg-detail-value" id="msgDetailName">—</span>
+      </div>
+      <div class="msg-detail-row">
+        <span class="msg-detail-label">Email</span>
+        <span class="msg-detail-value">
+          <a id="msgDetailEmail" href="#" style="color:var(--accent);">—</a>
+        </span>
+      </div>
+      <div class="msg-detail-row">
+        <span class="msg-detail-label">Phone</span>
+        <span class="msg-detail-value" id="msgDetailPhone">—</span>
+      </div>
+      <div class="msg-detail-row">
+        <span class="msg-detail-label">Interest</span>
+        <span class="msg-detail-value" id="msgDetailInterest">—</span>
+      </div>
+      <div class="msg-detail-row">
+        <span class="msg-detail-label">Received</span>
+        <span class="msg-detail-value" id="msgDetailDate">—</span>
+      </div>
+      <div style="margin-top:4px;">
+        <div style="font-size:0.72rem;color:var(--text-mid);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;">Message</div>
+        <div class="msg-message-box" id="msgDetailBody">—</div>
+      </div>
+    </div>
+    <div class="msg-modal-footer">
+      <button class="cancel-btn" onclick="closeMsgModal()">Close</button>
+      <!-- Reply link — href is populated by viewMessage() in the module script -->
+      <a id="msgReplyLink" href="#" class="add-btn" style="text-decoration:none;">
+        Reply via Email →
+      </a>
+    </div>
+  </div>
+</div>
+
+<div id="toastContainer"></div>
+
+<script type="module">
+  let _tableData = [];
+
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getDatabase, ref, push, set, update, remove, onValue }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBfDGBOWT7L9htPnljVjtWE8hq_XALgbjk",
+    authDomain: "xusfine.firebaseapp.com",
+    projectId: "xusfine",
+    storageBucket: "xusfine.firebasestorage.app",
+    messagingSenderId: "607144663172",
+    appId: "1:607144663172:web:ecd8ac868bd25e24a6cad1",
+    measurementId: "G-DSL1NBHZD8"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getDatabase(app, 'https://xusfine-default-rtdb.asia-southeast1.firebasedatabase.app/');
+
+  // ── AUTH STATE ──
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('adminPanel').style.display = 'flex';
+      document.getElementById('userEmail').textContent = user.email;
+      document.getElementById('userName').textContent = user.displayName || user.email;
+      loadProperties();
+      loadMessages();
+    } else {
+      document.getElementById('loginScreen').style.display = 'flex';
+      document.getElementById('adminPanel').style.display = 'none';
+    }
+  });
+  
+  
+
+  window.handleLogin = async function() {
+    const email    = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    if (!email || !password) { showToast('Please enter email and password', 'error'); return; }
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch(e) {
+      showToast('Error: ' + e.message, 'error');
+    }
+  };
+
+  window.logout = async function() {
+    await signOut(auth);
+    showToast('Logged out successfully.', 'info');
+  };
+
+  // ── PROPERTIES ──
+  function loadProperties() {
+    const propertiesRef = ref(db, 'properties');
+    onValue(propertiesRef, (snap) => {
+      const data = snap.val();
+      const props = [];
+      if (data) Object.keys(data).forEach(key => props.push({ id: key, ...data[key] }));
+      props.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      renderTable(props);
+      updateStats(props);
+    }, (err) => showToast('Database error: ' + err.message, 'error'));
+  }
+
+  window.editProperty = function(prop) {
+    window._editingId = prop.id;
+    document.getElementById('pName').value     = prop.name     || '';
+    document.getElementById('pType').value     = prop.type     || 'House';
+    document.getElementById('pLocation').value = prop.location || '';
+    document.getElementById('pPrice').value    = prop.price    || '';
+    document.getElementById('pBeds').value     = prop.beds     || '';
+    document.getElementById('pBaths').value    = prop.baths    || '';
+    document.getElementById('pArea').value     = prop.area     || '';
+    document.getElementById('pStatus').value   = prop.status   || 'For Sale';
+    document.getElementById('pDesc').value     = prop.desc     || '';
+    document.getElementById('pImages').value   = (prop.images  || []).join('\n');
+    document.getElementById('formPanelTitle').textContent = 'Edit Property';
+    document.getElementById('submitBtn').textContent      = 'Update Property';
+    openFormPanel();
+  };
+
+  window.submitProperty = async function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    btn.textContent = 'Saving…'; btn.disabled = true;
+    try {
+      const imageUrlsText = document.getElementById('pImages').value.trim();
+      const imageUrls = imageUrlsText
+        ? imageUrlsText.split('\n').map(u => u.trim()).filter(u => u)
+        : [];
+
+      const data = {
+        name:     document.getElementById('pName').value.trim(),
+        type:     document.getElementById('pType').value,
+        location: document.getElementById('pLocation').value.trim(),
+        price:    document.getElementById('pPrice').value.trim(),
+        beds:     document.getElementById('pBeds').value,
+        baths:    document.getElementById('pBaths').value,
+        area:     document.getElementById('pArea').value.trim(),
+        status:   document.getElementById('pStatus').value,
+        desc:     document.getElementById('pDesc').value.trim(),
+        images:   imageUrls,
+        createdAt: Date.now(),
+        addedBy:  auth.currentUser.email
+      };
+
+      if (window._editingId) {
+        await update(ref(db, 'properties/' + window._editingId), data);
+        showToast('Property updated successfully! ✓', 'success');
+        window._editingId = null;
+        btn.textContent = 'Add Property';
+      } else {
+        const newRef = push(ref(db, 'properties'));
+        await set(newRef, data);
+        showToast('Property added successfully! ✓', 'success');
+        btn.textContent = 'Add Property';
+      }
+      document.getElementById('propertyForm').reset();
+      closeFormPanel();
+    } catch(err) {
+      showToast('Error: ' + err.message, 'error');
+      btn.textContent = 'Try Again';
+    }
+    btn.disabled = false;
+  };
+
+  window.deleteProperty = async function(id) {
+    if (!confirm('Delete this property? This cannot be undone.')) return;
+    try {
+      await remove(ref(db, 'properties/' + id));
+      showToast('Property deleted.', 'info');
+    } catch(err) {
+      showToast('Delete failed: ' + err.message, 'error');
+    }
+  };
+
+  window.toggleFeatured = async function(id) {
+    const prop = _tableData.find(p => p.id === id);
+    if (!prop) return;
+    prop.featured = !prop.featured;
+    renderTable(_tableData);
+    try {
+      await update(ref(db, 'properties/' + id), { featured: prop.featured });
+      showToast(`Property ${prop.featured ? 'featured' : 'unfeatured'} successfully!`, 'success');
+    } catch(err) {
+      prop.featured = !prop.featured;
+      renderTable(_tableData);
+      showToast('Toggle failed: ' + err.message, 'error');
+    }
+  };
+
+  // ── MESSAGES ──
+  let _messages = [];
+
+  function loadMessages() {
+    const messagesRef = ref(db, 'messages');
+    onValue(messagesRef, (snap) => {
+      const data = snap.val();
+      _messages = [];
+      if (data) {
+        Object.keys(data).forEach(key => {
+          _messages.push({ id: key, ...data[key] });
+        });
+      }
+      _messages.sort((a, b) => (b.sentAt || 0) - (a.sentAt || 0));
+      renderMessages(_messages);
+      updateMessageBadge();
+    });
+  }
+
+  function updateMessageBadge() {
+    const unread = _messages.filter(m => !m.read).length;
+    const badge = document.getElementById('msgBadge');
+    if (badge) {
+      badge.textContent = unread > 0 ? unread : '';
+      badge.style.display = unread > 0 ? 'flex' : 'none';
+    }
+  }
+
+  function renderMessages(msgs) {
+    const container = document.getElementById('messagesTableBody');
+    if (!container) return;
+    if (!msgs || msgs.length === 0) {
+      container.innerHTML = `<tr><td colspan="6">
+        <div class="empty-state">
+          <div class="empty-icon">💬</div>
+          <p>No messages yet. They'll appear here when clients reach out.</p>
+        </div>
+      </td></tr>`;
+      return;
+    }
+    container.innerHTML = msgs.map(m => {
+      const date = m.sentAt ? new Date(m.sentAt).toLocaleDateString('en-PH', {
+        year: 'numeric', month: 'short', day: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+      }) : '—';
+      return `<tr class="${m.read ? '' : 'msg-unread'}" id="msg-row-${m.id}">
+        <td>
+          <div style="display:flex;align-items:center;gap:8px;">
+            ${!m.read ? '<span class="unread-dot"></span>' : '<span style="width:8px;display:inline-block;"></span>'}
+            <div>
+              <div style="font-weight:500;color:var(--text);">${m.firstName} ${m.lastName}</div>
+              <div style="font-size:0.78rem;color:var(--text-mid);">${m.email}</div>
+            </div>
+          </div>
+        </td>
+        <td style="color:var(--text-mid);font-size:0.82rem;">${m.phone || '—'}</td>
+        <td>
+          ${m.interest && m.interest !== 'Select type...'
+            ? `<span class="badge badge-sale">${m.interest}</span>`
+            : '<span style="color:var(--text-mid)">—</span>'}
+        </td>
+        <td style="max-width:280px;">
+          <div class="msg-preview">${m.message || '—'}</div>
+        </td>
+        <td style="color:var(--text-mid);font-size:0.78rem;white-space:nowrap;">${date}</td>
+        <td>
+          <div class="action-btns">
+            <button class="action-btn" onclick="viewMessage('${m.id}')">View</button>
+            ${!m.read
+              ? `<button class="action-btn action-btn-featured" onclick="markRead('${m.id}')">Mark Read</button>`
+              : `<button class="action-btn" style="background:rgba(255,255,255,0.04);color:var(--text-mid);" onclick="markUnread('${m.id}')">Unread</button>`
+            }
+            <button class="action-btn action-btn-del" onclick="deleteMessage('${m.id}')">Delete</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  // ── FIX: viewMessage is ONLY defined here in the module, with reply link included ──
+  window.viewMessage = function(id) {
+    const m = _messages.find(x => x.id === id);
+    if (!m) return;
+
+    const date = m.sentAt ? new Date(m.sentAt).toLocaleDateString('en-PH', {
+      year: 'numeric', month: 'long', day: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    }) : '—';
+
+    document.getElementById('msgDetailName').textContent     = `${m.firstName} ${m.lastName}`;
+
+    // Email — set both text and href so the link is clickable
+    const emailLink = document.getElementById('msgDetailEmail');
+    emailLink.textContent = m.email;
+    emailLink.href = `mailto:${m.email}`;
+
+    document.getElementById('msgDetailPhone').textContent    = m.phone || 'Not provided';
+    document.getElementById('msgDetailInterest').textContent = (m.interest && m.interest !== 'Select type...') ? m.interest : 'Not specified';
+    document.getElementById('msgDetailDate').textContent     = date;
+    document.getElementById('msgDetailBody').textContent     = m.message;
+
+    // ── FIX: Build the reply mailto link with pre-filled subject + greeting ──
+    const subject  = encodeURIComponent('Re: Your Property Inquiry – Finexus');
+    const body     = encodeURIComponent(
+      `Dear ${m.firstName},\n\nThank you for reaching out to Finexus. We have received your inquiry and will get back to you shortly.\n\nBest regards,\nFinexus Team`
+    );
+    document.getElementById('msgReplyLink').href = `mailto:${m.email}?subject=${subject}&body=${body}`;
+
+    document.getElementById('msgDetailModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+
+    if (!m.read) markRead(id);
+  };
+
+  window.markRead = async function(id) {
+    try {
+      await update(ref(db, 'messages/' + id), { read: true });
+    } catch(err) {
+      showToast('Could not update message.', 'error');
+    }
+  };
+
+  window.markUnread = async function(id) {
+    try {
+      await update(ref(db, 'messages/' + id), { read: false });
+    } catch(err) {
+      showToast('Could not update message.', 'error');
+    }
+  };
+
+  window.deleteMessage = async function(id) {
+    if (!confirm('Delete this message? This cannot be undone.')) return;
+    try {
+      await remove(ref(db, 'messages/' + id));
+      showToast('Message deleted.', 'info');
+    } catch(err) {
+      showToast('Delete failed: ' + err.message, 'error');
+    }
+  };
+
+  window.markAllRead = async function() {
+    const unread = _messages.filter(m => !m.read);
+    if (!unread.length) { showToast('All messages are already read.', 'info'); return; }
+    try {
+      await Promise.all(unread.map(m => update(ref(db, 'messages/' + m.id), { read: true })));
+      showToast(`${unread.length} messages marked as read.`, 'success');
+    } catch(err) {
+      showToast('Error: ' + err.message, 'error');
+    }
+  };
+</script>
+
+<script>
+  // ── STATS ──
+  function updateStats(props) {
+    document.getElementById('statTotal').textContent    = props.length;
+    document.getElementById('statSale').textContent     = props.filter(p => p.status === 'For Sale').length;
+    document.getElementById('statRent').textContent     = props.filter(p => p.status === 'For Rent').length;
+    document.getElementById('statFeatured').textContent = props.filter(p => p.featured).length;
+  }
+
+  // ── PROPERTIES TABLE ──
+  function renderTable(props) {
+    _tableData = props;
+    const tbody = document.getElementById('propTableBody');
+    if (!props.length) {
+      tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">🏠</div><p>No properties yet. Click "Add Property" to get started!</p></div></td></tr>`;
+      return;
+    }
+    tbody.innerHTML = props.map(p => {
+      const firstImg = Array.isArray(p.images) && p.images.length > 0 ? p.images[0] : p.image || '';
+      const imgUrl = convertDriveUrl(firstImg);
+      return `<tr>
+        <td><img class="prop-img-thumb"
+          src="${imgUrl || 'https://images.unsplash.com/photo-1560184897-ae75f418493e?w=200&q=60'}"
+          onerror="this.src='https://images.unsplash.com/photo-1560184897-ae75f418493e?w=200&q=60'"
+          alt="" loading="lazy"></td>
+        <td>
+          <div class="prop-name-cell">${p.name}</div>
+          <div class="prop-location">📍 ${p.location}</div>
+        </td>
+        <td>${p.type || '—'}</td>
+        <td><span class="badge ${p.status === 'For Rent' ? 'badge-rent' : 'badge-sale'}">${p.status || 'For Sale'}</span></td>
+        <td><strong>₱${p.price}</strong></td>
+        <td>${p.featured ? '<span class="badge badge-featured">⭐ Yes</span>' : '<span style="color:var(--text-mid)">No</span>'}</td>
+        <td>
+          <div class="action-btns">
+            <button class="action-btn" onclick='editProperty(${JSON.stringify(p).replace(/'/g, "&#39;")})'>Edit</button>
+            <button class="action-btn ${p.featured ? 'action-btn-featured' : 'action-btn-unfeatured'}" onclick="toggleFeatured('${p.id}')">${p.featured ? 'Unfeature' : 'Feature'}</button>
+            <button class="action-btn action-btn-del" onclick="deleteProperty('${p.id}')">Delete</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  function filterTable(query) {
+    if (!query) { renderTable(_tableData); return; }
+    const q = query.toLowerCase();
+    const filtered = _tableData.filter(p =>
+      p.name?.toLowerCase().includes(q) ||
+      p.location?.toLowerCase().includes(q) ||
+      p.type?.toLowerCase().includes(q)
+    );
+    renderTable(filtered);
+  }
+
+  // ── MESSAGES TABLE ──
+  let _allMessages = [];
+
+  function renderMessages(msgs) {
+    _allMessages = msgs;
+    const container = document.getElementById('messagesTableBody');
+    if (!container) return;
+    if (!msgs || msgs.length === 0) {
+      container.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">💬</div><p>No messages yet.</p></div></td></tr>`;
+      return;
+    }
+    container.innerHTML = msgs.map(m => {
+      const date = m.sentAt ? new Date(m.sentAt).toLocaleDateString('en-PH', {
+        year: 'numeric', month: 'short', day: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+      }) : '—';
+      return `<tr class="${m.read ? '' : 'msg-unread'}" id="msg-row-${m.id}">
+        <td>
+          <div style="display:flex;align-items:center;gap:8px;">
+            ${!m.read ? '<span class="unread-dot"></span>' : '<span style="width:8px;display:inline-block;"></span>'}
+            <div>
+              <div style="font-weight:500;color:var(--text);">${m.firstName} ${m.lastName}</div>
+              <div style="font-size:0.78rem;color:var(--text-mid);">${m.email}</div>
+            </div>
+          </div>
+        </td>
+        <td style="color:var(--text-mid);font-size:0.82rem;">${m.phone || '—'}</td>
+        <td>${m.interest && m.interest !== 'Select type...' ? `<span class="badge badge-sale">${m.interest}</span>` : '<span style="color:var(--text-mid)">—</span>'}</td>
+        <td><div class="msg-preview">${m.message || '—'}</div></td>
+        <td style="color:var(--text-mid);font-size:0.78rem;white-space:nowrap;">${date}</td>
+        <td>
+          <div class="action-btns">
+            <button class="action-btn" onclick="viewMessage('${m.id}')">View</button>
+            ${!m.read
+              ? `<button class="action-btn action-btn-featured" onclick="markRead('${m.id}')">Mark Read</button>`
+              : `<button class="action-btn" style="background:rgba(255,255,255,0.04);color:var(--text-mid);" onclick="markUnread('${m.id}')">Unread</button>`
+            }
+            <button class="action-btn action-btn-del" onclick="deleteMessage('${m.id}')">Delete</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  window.renderMessages = renderMessages;
+
+  window.updateMessageBadge = function() {
+    const unread = _allMessages.filter(m => !m.read).length;
+    const badge = document.getElementById('msgBadge');
+    if (badge) {
+      badge.textContent = unread > 0 ? unread : '';
+      badge.style.display = unread > 0 ? 'flex' : 'none';
+    }
+  };
+
+  function filterMessages(query) {
+    if (!query) { renderMessages(_allMessages); return; }
+    const q = query.toLowerCase();
+    const filtered = _allMessages.filter(m =>
+      (m.firstName + ' ' + m.lastName).toLowerCase().includes(q) ||
+      m.email?.toLowerCase().includes(q) ||
+      m.message?.toLowerCase().includes(q)
+    );
+    renderMessages(filtered);
+  }
+
+  function closeMsgModal() {
+    document.getElementById('msgDetailModal').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  window.closeMsgModal = closeMsgModal;
+
+  document.getElementById('msgDetailModal').addEventListener('click', function(e) {
+    if (e.target === this) closeMsgModal();
+  });
+
+  // ── NAVIGATION ──
+  function showSection(section) {
+    document.getElementById('propertiesSection').style.display  = section === 'properties' ? 'block' : 'none';
+    document.getElementById('messagesSection').style.display    = section === 'messages'   ? 'block' : 'none';
+    document.getElementById('analyticsSection').style.display   = section === 'analytics'  ? 'block' : 'none';
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+    const navItems = document.querySelectorAll('.sidebar-nav .nav-item');
+    if (section === 'properties') navItems[0]?.classList.add('active');
+    if (section === 'messages')   navItems[1]?.classList.add('active');
+    if (section === 'analytics')  navItems[2]?.classList.add('active');
+  }
+  window.showSection = showSection;
+
+  // ── FORM PANEL ──
+  function openFormPanel() {
+    document.getElementById('formOverlay').classList.add('open');
+    document.getElementById('formPanel').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeFormPanel() {
+    document.getElementById('formOverlay').classList.remove('open');
+    document.getElementById('formPanel').classList.remove('open');
+    document.body.style.overflow = '';
+    window._editingId = null;
+    document.getElementById('formPanelTitle').textContent = 'Add New Property';
+    document.getElementById('submitBtn').textContent      = 'Add Property';
+  }
+
+  function resetForm() {
+    document.getElementById('propertyForm').reset();
+    window._editingId = null;
+    document.getElementById('formPanelTitle').textContent = 'Add New Property';
+    document.getElementById('submitBtn').textContent      = 'Add Property';
+  }
+
+  window.openFormPanel  = openFormPanel;
+  window.closeFormPanel = closeFormPanel;
+  window.resetForm      = resetForm;
+
+  // ── DRIVE URL CONVERTER ──
+  function convertDriveUrl(url) {
+    if (!url) return '';
+    let fileId = null;
+    const m1 = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+    if (m1) fileId = m1[1];
+    const m2 = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    if (!fileId && m2) fileId = m2[1];
+    if (fileId) return `https://drive.google.com/thumbnail?id=${fileId}&sz=w800`;
+    return url;
+  }
+
+  // ── TOAST ──
+  function showToast(msg, type = 'info') {
+    const icons = { success: '✓', error: '✕', info: 'ℹ' };
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `
+      <span class="toast-icon">${icons[type]}</span>
+      <span class="toast-msg">${msg}</span>
+      <button class="toast-close" onclick="this.parentElement.remove()">✕</button>
+    `;
+    document.getElementById('toastContainer').appendChild(toast);
+    setTimeout(() => { if (toast.parentElement) toast.remove(); }, 5000);
+  }
+  window.showToast = showToast;
+</script>
+
+</body>
+</html>
